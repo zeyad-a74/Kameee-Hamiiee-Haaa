@@ -1,0 +1,410 @@
+/* style.css — Goku Pixel Battle
+   Professional, mobile-first, responsive UI for the provided HTML structure.
+*/
+
+/* ------------------------------------------
+   Variables
+-------------------------------------------*/
+:root{
+  --bg-0: #eaf8ff;
+  --bg-1: #d7f2ff;
+  --accent: #ffd54a;
+  --primary: #0ea5e9;
+  --primary-2: #0284c7;
+  --muted: #6b7280;
+  --dark: #0f172a;
+  --white: #ffffff;
+  --danger: #ff4d4f;
+  --shadow: rgba(2,6,23,0.35);
+  --glass: rgba(255,255,255,0.12);
+  --control-bg: linear-gradient(180deg,#fff176,#ffcc33);
+  --safe-padding: env(safe-area-inset-bottom, 12px);
+  --ui-radius: 12px;
+  --pixel-size: 64px; /* default sprite size */
+}
+
+/* ------------------------------------------
+   Global reset & base
+-------------------------------------------*/
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html,body { height: 100%; }
+body {
+  font-family: "Helvetica Neue", Arial, "Noto Sans", system-ui, -apple-system;
+  background: linear-gradient(180deg, var(--bg-0), var(--bg-1));
+  color: var(--dark);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  display:flex;
+  justify-content:center;
+  padding: 18px;
+  line-height:1.2;
+}
+
+/* App container */
+#app {
+  width: 100%;
+  max-width: 480px;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* ------------------------------------------
+   PRELOADER
+-------------------------------------------*/
+#preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.9));
+  transition: opacity .28s ease, visibility .28s;
+}
+
+#preloader[aria-hidden="true"] { opacity:0; visibility:hidden; pointer-events:none; }
+
+.spinner {
+  width:64px;
+  height:64px;
+  border-radius:8px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  box-shadow: 0 8px 20px var(--shadow), inset 0 -6px 14px rgba(255,255,255,0.12);
+  display:inline-block;
+  animation: spinScale 1.2s ease-in-out infinite;
+  margin-bottom:12px;
+}
+@keyframes spinScale {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(.9); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.preload-text{
+  font-size: 0.9rem;
+  color: var(--dark);
+  font-weight:700;
+  letter-spacing: .4px;
+}
+
+/* ------------------------------------------
+   HEADER / HUD
+-------------------------------------------*/
+#header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  box-shadow: 0 6px 16px rgba(2,6,23,0.06);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(15,23,42,0.06);
+}
+
+.brand { display:flex; align-items:center; gap:10px; }
+.logo { width:40px; height:40px; display:block; border-radius:6px; box-shadow: 0 4px 12px rgba(2,6,23,0.12); }
+.title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: .6px;
+  color: var(--dark);
+}
+
+/* HUD */
+.hud { display:flex; gap:10px; align-items:center; margin-left:auto; }
+.hud-item {
+  background: rgba(255,255,255,0.06);
+  padding:6px 8px;
+  border-radius:8px;
+  font-weight:700;
+  color:var(--white);
+  display:flex;
+  gap:6px;
+  align-items:center;
+  font-size: 0.78rem;
+  min-width:68px;
+  justify-content:center;
+  box-shadow: 0 2px 6px rgba(2,6,23,0.08);
+}
+.hud-item .value {
+  margin-left:6px;
+  color:var(--accent);
+  font-weight:900;
+}
+
+/* header actions (icons) */
+.header-actions { display:flex; gap:8px; margin-left:8px; align-items:center; }
+.icon-btn {
+  width:38px; height:34px; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:8px; border:none;
+  background: rgba(255,255,255,0.06); color:var(--white);
+  text-decoration:none;
+  box-shadow:0 2px 6px rgba(2,6,23,0.06);
+}
+
+/* ------------------------------------------
+   GAME WRAPPER & CANVAS
+-------------------------------------------*/
+#game-wrapper {
+  position:relative;
+  width:100%;
+  aspect-ratio: 9 / 16; /* portrait friendly */
+  max-height: 740px;
+  background: linear-gradient(180deg, #bfe9ff, #87ceeb 60%);
+  border-radius: 14px;
+  overflow:hidden;
+  border: 3px solid rgba(0,0,0,0.12);
+  box-shadow: 0 12px 30px rgba(2,6,23,0.14);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* Canvas: covers whole scene */
+#game-canvas {
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  image-rendering: pixelated; /* keep pixel art crisp */
+}
+
+/* DOM scene fallback (if used) */
+#scene {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+/* Layer images */
+.layer {
+  position:absolute;
+  left:0; top:0;
+  width:100%;
+  height:auto;
+  image-rendering: pixelated;
+  user-select:none;
+  z-index:0;
+}
+
+/* ground placement override */
+.layer#ground {
+  bottom:0;
+  top:auto;
+  height:40%;
+  object-fit:cover;
+}
+
+/* Sprites common */
+.sprite {
+  position:absolute;
+  width:var(--pixel-size);
+  height:var(--pixel-size);
+  user-select:none;
+  pointer-events:none;
+  image-rendering: pixelated;
+  transform-origin:center center;
+  z-index:2;
+  transition: transform .08s linear, left .12s linear, top .12s linear;
+  will-change: transform, left, top;
+}
+
+/* Player / enemy default positions (JS will set left/top) */
+.sprite.player { z-index: 3; filter: drop-shadow(0 6px 8px rgba(2,6,23,0.28)); }
+.sprite.enemy { z-index: 3; filter: drop-shadow(0 6px 8px rgba(2,6,23,0.22)); }
+
+/* Attack sprite special */
+.sprite.attack {
+  z-index:4;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 8px 16px rgba(0,150,255,0.25));
+  transition: left .18s linear;
+}
+
+/* subtle bobbing for idle characters */
+@keyframes idleBob {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+.sprite[data-state="neutral"] { animation: idleBob 1.5s ease-in-out infinite; }
+
+/* flip helper (used when flipping sprite direction) */
+.flipX { transform: scaleX(-1); }
+
+/* ------------------------------------------
+   Overlay UI / messages
+-------------------------------------------*/
+.overlay-ui {
+  position:absolute;
+  left:0; right:0; top:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index: 10;
+  pointer-events:none;
+}
+.message {
+  background: rgba(0,0,0,0.6);
+  color:var(--white);
+  padding:8px 12px;
+  border-radius: 10px;
+  font-weight:700;
+  display:none;
+}
+
+/* Hint text inside viewport */
+.hint {
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom: 6%;
+  z-index:9;
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  padding:6px 10px;
+  border-radius:10px;
+  font-size:0.8rem;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+}
+
+/* ------------------------------------------
+   Controls (mobile touch targets)
+-------------------------------------------*/
+.controls {
+  display:flex;
+  gap:14px;
+  justify-content:center;
+  align-items:center;
+  padding: 8px 8px calc(var(--safe-padding) + 8px);
+  background: transparent;
+}
+
+.ctrl {
+  -webkit-tap-highlight-color: transparent;
+  height:56px;
+  min-width:64px;
+  padding:0 10px;
+  border-radius:14px;
+  border: none;
+  font-size:22px;
+  font-weight:900;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background: linear-gradient(180deg,#fff,#ffd54a);
+  box-shadow: 0 6px #b38f00;
+  color: #000;
+  transition: transform .08s ease, box-shadow .08s ease;
+  touch-action: manipulation;
+}
+.ctrl.primary {
+  background: linear-gradient(180deg,#ff7a59,#ff3b30);
+  color: #fff;
+  box-shadow: 0 6px rgba(255,59,48,0.32);
+}
+.ctrl:active { transform: translateY(4px); box-shadow: 0 0 #b38f00; }
+
+/* big hit area for accessibility */
+.ctrl:focus {
+  outline: 3px solid rgba(2,6,23,0.12);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------
+   Modal (settings)
+-------------------------------------------*/
+.modal {
+  position: fixed;
+  inset: 0;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  z-index: 999;
+  padding: 18px;
+  pointer-events:none;
+}
+.modal[hidden] { display:none; }
+
+.modal-inner{
+  width:100%;
+  max-width:420px;
+  border-radius: 14px 14px 10px 10px;
+  background: linear-gradient(180deg,#fff,#f6f8fb);
+  box-shadow: 0 20px 40px rgba(2,6,23,0.18);
+  padding: 12px;
+  pointer-events:auto;
+}
+
+.modal-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+.modal-head h2 { font-size:1rem; color:var(--dark); }
+.modal-close { background:transparent; border:none; font-size:1.2rem; cursor:pointer; }
+
+.modal-body { display:flex; flex-direction:column; gap:8px; font-size:0.9rem; color:var(--muted); padding:6px 2px; }
+.modal-body label { display:flex; align-items:center; gap:8px; }
+.modal-foot { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+.btn { padding:8px 12px; border-radius:10px; border:none; background:var(--primary); color:#fff; font-weight:700; cursor:pointer; }
+
+/* ------------------------------------------
+   Footer
+-------------------------------------------*/
+#footer { margin-top:6px; text-align:center; color:var(--muted); font-size:0.78rem; display:flex; justify-content:space-between; gap:8px; align-items:center; padding:6px 10px;}
+.footer-inner { width:100%; display:flex; justify-content:space-between; gap:8px; align-items:center; }
+.footer-inner .credits { font-weight:700; }
+.footer-inner .version { font-weight:900; color:var(--danger); }
+
+/* ------------------------------------------
+   Accessibility helpers & utilities
+-------------------------------------------*/
+.sr-only {
+  position:absolute !important;
+  width:1px; height:1px;
+  padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0);
+  white-space:nowrap; border:0;
+}
+
+/* small helpers */
+.hidden { display:none !important; }
+.center { display:flex; align-items:center; justify-content:center; }
+
+/* ------------------------------------------
+   Responsive tweaks
+-------------------------------------------*/
+@media (min-width: 420px) {
+  #game-wrapper { aspect-ratio: 9/16; }
+  .sprite { width: var(--pixel-size); height: var(--pixel-size); }
+}
+
+@media (max-width: 420px) {
+  :root { --pixel-size: 56px; }
+  .hud { gap:6px; }
+  .hud-item { font-size:0.72rem; min-width:56px; padding:5px 6px; }
+  .ctrl { height:50px; min-width:56px; font-size:20px; }
+  .modal-inner { border-radius:12px; }
+}
+
+/* ------------------------------------------
+   Visual polish: small animations & kame glow
+-------------------------------------------*/
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 0 rgba(0,150,255,0.0); }
+  50% { box-shadow: 0 0 24px 6px rgba(0,150,255,0.12); }
+  100% { box-shadow: 0 0 0 0 rgba(0,150,255,0.0); }
+}
+.kame-active { animation: pulseGlow 0.9s ease-in-out 1; }
+
+/* ------------------------------------------
+   Focus & keyboard usability
+-------------------------------------------*/
+:focus { outline: 3px solid rgba(2,6,23,0.08); outline-offset: 2px; }
+
+/* ------------------------------------------
+   Small debug helper (remove in production)
+-------------------------------------------*/
+.debug-bounds * { outline: 1px dashed rgba(0,0,0,0.06); }
