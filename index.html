@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Goku Pixel Battle</title>
+  <meta name="description" content="Goku Pixel Battle — mobile pixel game. First release Beta 0.1. All characters and world designed by Zeyad." />
+  <meta name="theme-color" content="#1E90FF" />
+
+  <!-- Icons / PWA (placeholders you can replace) -->
+  <link rel="icon" href="icons/icon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Preload critical assets -->
+  <link rel="preload" href="goku_neutral.png" as="image">
+  <link rel="preload" href="goku_walk_right.png" as="image">
+  <link rel="preload" href="goku_walk_left.png" as="image">
+  <link rel="preload" href="kamehameha_right.png" as="image">
+  <link rel="preload" href="kamehameha_left.png" as="image">
+  <link rel="preload" href="kamehameha.mp3" as="audio">
+</head>
+<body>
+  <!-- App root -->
+  <div id="app" class="app" data-version="Beta 0.1">
+
+    <!-- PRELOADER -->
+    <div id="preloader" aria-hidden="false" role="status">
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="preload-text">Loading Goku Pixel Battle...</div>
+    </div>
+
+    <!-- HEADER / HUD -->
+    <header id="header" role="banner" aria-label="Game header">
+      <div class="brand">
+        <svg class="logo" width="36" height="36" viewBox="0 0 24 24" aria-hidden="true">
+          <rect width="24" height="24" rx="4" fill="#111827"></rect>
+          <text x="12" y="16" text-anchor="middle" font-family="monospace" font-size="12" fill="#ffd54a">G</text>
+        </svg>
+        <h1 class="title">Goku Pixel Battle</h1>
+      </div>
+
+      <div class="hud" role="status" aria-live="polite">
+        <div class="hud-item" id="level" title="Current level">Level <span class="value">1</span></div>
+        <div class="hud-item" id="score" title="Score">Score <span class="value">0</span></div>
+        <div class="hud-item" id="hp" title="Player HP">HP <span class="value">100</span></div>
+      </div>
+
+      <div class="header-actions" aria-hidden="true">
+        <button id="btn-settings" class="icon-btn" aria-label="Open settings">⚙</button>
+        <a id="repo-link" class="icon-btn" href="https://github.com/zeyad-a74/Kameee-Hamiiee-Haaa" target="_blank" rel="noopener" aria-label="Repository">GH</a>
+      </div>
+    </header>
+
+    <!-- MAIN GAME VIEWPORT -->
+    <main id="game-wrapper" role="main" aria-label="Game area">
+      <!-- Canvas fallback for advanced rendering -->
+      <canvas id="game-canvas" width="480" height="320" aria-label="Game canvas"></canvas>
+
+      <!-- DOM sprites for simple CSS positioning / fallback -->
+      <div id="scene" aria-hidden="true">
+        <img id="sky" class="layer" src="sky.png" alt="" aria-hidden="true">
+        <img id="ground" class="layer" src="ground.png" alt="" aria-hidden="true">
+
+        <!-- Player & enemy images (JS swaps src to change pose) -->
+        <img id="goku" class="sprite player" src="goku_neutral.png" alt="Goku player" draggable="false" data-direction="right" data-state="neutral">
+        <img id="enemy" class="sprite enemy" src="character2_neutral.png" alt="Enemy" draggable="false" data-direction="left" data-state="neutral">
+
+        <!-- Attack sprite (hidden until used) -->
+        <img id="kame" class="sprite attack" src="kamehameha_right.png" alt="Kamehameha" draggable="false" style="display:none;" data-direction="right">
+      </div>
+
+      <!-- Overlay UI -->
+      <div id="overlay-ui" class="overlay-ui" aria-hidden="true">
+        <div id="message" class="message" role="alert" aria-live="assertive"></div>
+      </div>
+
+      <!-- Hint -->
+      <div id="hint" class="hint">Touch ◀ ▶ to move · Tap 🔥 to attack</div>
+    </main>
+
+    <!-- MOBILE CONTROLS -->
+    <nav id="controls" class="controls" role="navigation" aria-label="Game controls">
+      <button id="left" class="ctrl" data-action="left" aria-label="Move left" type="button">◀</button>
+      <button id="attack" class="ctrl primary" data-action="attack" aria-label="Attack" type="button">🔥</button>
+      <button id="right" class="ctrl" data-action="right" aria-label="Move right" type="button">▶</button>
+    </nav>
+
+    <!-- SETTINGS MODAL -->
+    <div id="modal-settings" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+      <div class="modal-inner">
+        <header class="modal-head">
+          <h2 id="modal-title">Settings</h2>
+          <button class="modal-close" id="close-settings" aria-label="Close settings">✕</button>
+        </header>
+        <section class="modal-body">
+          <label><input type="checkbox" id="toggle-sound" checked> Sound</label>
+          <label><input type="checkbox" id="toggle-vibrate"> Vibrate on hit</label>
+          <label>Attack speed: <input id="attack-speed" type="range" min="0.5" max="3" step="0.1" value="1"></label>
+          <label>Graphics: 
+            <select id="gfx-quality">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </label>
+        </section>
+        <footer class="modal-foot">
+          <button id="save-settings" class="btn">Save</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer id="footer" role="contentinfo">
+      <div class="footer-inner">
+        <p class="credits">My first game — all characters & world designed by me.</p>
+        <p class="version" style="color:red">Beta 0.1</p>
+      </div>
+    </footer>
+
+    <!-- TEMPLATES -->
+    <template id="kame-frames">
+      <!-- placeholder frames if JS wants to generate animated frames -->
+      <img src="kamehameha_right.png" alt="">
+      <img src="kamehameha_left.png" alt="">
+    </template>
+
+    <!-- Accessibility helpers -->
+    <a id="skip-to-controls" class="sr-only" href="#controls">Skip to controls</a>
+
+    <!-- Audio (preloaded) -->
+    <audio id="sfx-kame" src="kamehameha.mp3" preload="auto"></audio>
+  </div>
+
+  <!-- Progressive enhancement script loader -->
+  <script>
+    // Minimal inline bootstrap: hide preloader when DOM ready (improves perceived performance)
+    (function(){
+      function ready() {
+        const pre = document.getElementById('preloader');
+        if (pre) pre.style.display = 'none';
+      }
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setTimeout(ready, 250);
+      } else {
+        document.addEventListener('DOMContentLoaded', ready);
+      }
+    })();
+  </script>
+
+  <!-- External game logic (deferred) -->
+  <script src="script.js" defer></script>
+</body>
+</html>
